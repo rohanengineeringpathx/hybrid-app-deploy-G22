@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-backend
+  template:
+    metadata:
+      labels:
+        app: my-backend
+    spec:
+      containers:
+      - name: my-backend
+        image: 340285141850.dkr.ecr.ap-south-1.amazonaws.com/my-backend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-backend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: my-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

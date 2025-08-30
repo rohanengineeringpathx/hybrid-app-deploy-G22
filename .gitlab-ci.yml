@@ -1,0 +1,32 @@
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+
+build-backend:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - cd backend
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+
+deploy-eks:
+  stage: deploy
+  image: amazon/aws-cli:latest
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws eks update-kubeconfig --name my-hybrid-backend --region ap-south-1
+    - kubectl set image deployment/my-backend-deployment my-backend=$CI_REGISTRY_IMAGE:latest
+  only:
+    - main
